@@ -18,9 +18,10 @@ public class BoardRequest {
         // DTO에서 Entity로 변환하는 메서드
         // 계층 간 데이터 변환을 명확하게 분리
         // 비즈니스 로직(Entity 생성)을 DTO에서 캡슐화
-        public Board toEntity(){
-            return new Board(title, content, username);
-        }
+        // TODO - 오류 나는 부분 추후 수정
+//        public Board toEntity(){
+//            return new Board(title, content, username);
+//        }
     }
 
     // 게시글 수정용 DTO 추가
