@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -11,6 +12,19 @@ import java.util.List;
 @Repository
 public class BoardRepository {
     private final EntityManager em;
+
+    // 게시글 저장: User와 연관관계를 가진 Board 엔티티 영속화
+    @Transactional
+    public Board save(Board board) {
+        // 비영속 상태의 Board 엔티티를 영속성 컨텍스트에 저장
+        // Board의 User 연관관계도 함께 처리됨
+        em.persist(board);
+
+        // persist() 후 board 객체는 영속 상태가 됨
+        // 트랜잭션 커밋 시점에 실제 INSERT 쿼리 실행
+        // 자동 생성된 ID와 생성시간이 board 객체에 설정됨
+        return board;
+    }
 
     // 게시글 목록 조회 - 최신순 정렬
     public List<Board> findAll() {

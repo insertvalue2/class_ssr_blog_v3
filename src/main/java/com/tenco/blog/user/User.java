@@ -15,7 +15,7 @@ import java.sql.Timestamp;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     // 사용자명 중복 방지를 위한 유니크 제약조건
     @Column(unique = true)
@@ -30,7 +30,7 @@ public class User {
 
     // 빌더 패턴: 객체 생성 시 가독성과 안전성 향상
     @Builder
-    public User(Integer id, String username, String password, String email, Timestamp createdAt) {
+    public User(Long id, String username, String password, String email, Timestamp createdAt) {
         this.id = id;
         this.username = username;
         this.password = password;
