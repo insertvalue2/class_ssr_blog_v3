@@ -39,8 +39,7 @@ public class UserController {
             // 3. 로그인 성공/실패 처리
             if (sessionUser == null) {
                 // 로그인 실패: 일치하는 사용자 없음
-                //throw new IllegalArgumentException("사용자명 또는 비밀번호가 올바르지 않습니다");
-                return "redirect:/";
+                throw new IllegalArgumentException("사용자명 또는 비밀번호가 올바르지 않습니다");
             }
 
             // 4. 로그인 성공: 세션에 사용자 정보 저장

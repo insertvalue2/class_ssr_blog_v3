@@ -18,6 +18,56 @@ public class BoardController {
 
     private final BoardRepository boardRepository;
 
+    // 게시글 삭제: 권한 체크 포함
+    @PostMapping("/board/{id}/delete")
+    public String delete(@PathVariable("id") Long id, HttpSession session) {
+
+        System.out.println("=== 게시글 삭제 요청 ===");
+        System.out.println("삭제 대상 게시글 ID: " + id);
+
+        // 1. 로그인 체크: 로그인하지 않은 사용자는 삭제 불가
+        User sessionUser = (User) session.getAttribute("sessionUser");
+        if (sessionUser == null) {
+            System.out.println("로그인하지 않은 사용자의 삭제 시도");
+            return "redirect:/login-form";
+        }
+
+        System.out.println("삭제 요청자: " + sessionUser.getUsername());
+
+        try {
+            // 2. 삭제할 게시글 조회 (권한 체크를 위해)
+            Board board = boardRepository.findById(id);
+
+            System.out.println("삭제 대상 게시글: " + board.getTitle());
+            System.out.println("게시글 작성자: " + board.getUser().getUsername());
+
+            // 3. 권한 체크: 본인이 작성한 게시글만 삭제 가능
+            if (!board.isOwner(sessionUser.getId())) {
+                System.out.println("삭제 권한 없음: 다른 사용자의 게시글");
+                throw new RuntimeException("삭제 권한이 없습니다. 본인이 작성한 게시글만 삭제할 수 있습니다.");
+            }
+
+            // 4. 권한 확인 완료 후 삭제 실행
+            boardRepository.deleteById(id);
+
+            System.out.println("=== 게시글 삭제 완료 ===");
+            System.out.println("삭제된 게시글 ID: " + id);
+
+            // 5. 삭제 성공 시 메인 페이지로 리다이렉트
+            return "redirect:/";
+
+        } catch (IllegalArgumentException e) {
+            // 존재하지 않는 게시글 삭제 시도
+            System.out.println("삭제 실패: " + e.getMessage());
+            return "redirect:/?error=notfound";
+
+        } catch (RuntimeException e) {
+            // 권한 없음 또는 기타 오류
+            System.out.println("삭제 실패: " + e.getMessage());
+            return "redirect:/board/" + id + "?error=unauthorized";
+        }
+    }
+
 
     // 게시글 작성 폼 페이지
     @GetMapping("/board/save-form")

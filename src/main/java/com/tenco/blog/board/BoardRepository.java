@@ -13,6 +13,61 @@ import java.util.List;
 public class BoardRepository {
     private final EntityManager em;
 
+    // JPQL을 사용한 게시글 삭제
+    @Transactional
+    public void deleteById(Long id) {
+        // 1. JPQL DELETE 쿼리 작성
+        // 엔티티명(Board) 사용, 테이블명(board_tb) 아님
+        String jpql = "DELETE FROM Board b WHERE b.id = :id";
+
+        Query query = em.createQuery(jpql);
+        query.setParameter("id", id);
+
+        // 2. DELETE 쿼리 실행
+        int deletedCount = query.executeUpdate();
+
+        System.out.println("=== JPQL DELETE 실행 ===");
+        System.out.println("삭제 대상 ID: " + id);
+        System.out.println("삭제된 행 수: " + deletedCount);
+
+        // 3. 삭제 결과 확인
+        if (deletedCount == 0) {
+            throw new IllegalArgumentException("삭제할 게시글을 찾을 수 없습니다. ID: " + id);
+        }
+
+        // executeUpdate() 특징:
+        // - INSERT, UPDATE, DELETE 쿼리에 사용
+        // - 영향받은 행의 수를 반환
+        // - 즉시 데이터베이스에 반영됨 (1차 캐시 우회)
+    }
+
+    // 권장!
+    // 안전한 삭제를 위한 대안 메서드 (em.remove 사용)
+    @Transactional
+    public void deleteByIdSafely(Long id) {
+        // 1. 먼저 삭제할 엔티티를 영속 상태로 조회
+        Board board = em.find(Board.class, id);
+
+        // 2. 엔티티 존재 여부 확인
+        if (board == null) {
+            throw new IllegalArgumentException("삭제할 게시글을 찾을 수 없습니다. ID: " + id);
+        }
+
+        // 3. 영속 상태의 엔티티를 삭제 상태로 변경
+        em.remove(board);
+
+        System.out.println("=== em.remove() 삭제 실행 ===");
+        System.out.println("삭제된 게시글: " + board.getTitle());
+        System.out.println("작성자: " + board.getUser().getUsername());
+
+        // em.remove()의 장점:
+        // - 영속성 컨텍스트에서 관리되는 엔티티 삭제
+        // - 1차 캐시에서도 자동 제거
+        // - 연관관계 처리 자동 수행
+    }
+
+
+
     // 게시글 저장: User와 연관관계를 가진 Board 엔티티 영속화
     @Transactional
     public Board save(Board board) {
