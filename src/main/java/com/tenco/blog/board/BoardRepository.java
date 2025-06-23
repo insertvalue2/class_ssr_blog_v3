@@ -13,6 +13,38 @@ import java.util.List;
 public class BoardRepository {
     private final EntityManager em;
 
+
+    // Dirty Checking을 활용한 게시글 수정
+    @Transactional
+    public Board updateById(Long id, BoardRequest.UpdateDTO reqDTO) {
+        // 1. 수정할 게시글을 영속 상태로 조회
+        Board board = findById(id);  // 영속성 컨텍스트에서 관리되는 엔티티
+
+        System.out.println("=== Dirty Checking 수정 시작 ===");
+        System.out.println("수정 전 제목: " + board.getTitle());
+        System.out.println("수정 전 내용: " + board.getContent());
+
+        // 2. 영속 상태 엔티티의 값 변경 (Dirty Checking 시작)
+        // Board 엔티티의 update() 메서드 호출
+        board.update(reqDTO);
+
+        System.out.println("=== 엔티티 값 변경 완료 ===");
+        System.out.println("수정 후 제목: " + board.getTitle());
+        System.out.println("수정 후 내용: " + board.getContent());
+
+        // 3. persist() 호출 불필요!
+        // 트랜잭션 커밋 시점에 영속성 컨텍스트가 자동으로 변경 감지
+        // 변경된 필드만 UPDATE 쿼리 자동 생성 및 실행
+
+        return board;
+
+        // Dirty Checking의 동작 과정:
+        // 1. 영속성 컨텍스트가 엔티티 최초 상태를 스냅샷으로 보관
+        // 2. 필드 값 변경 시 현재 상태와 스냅샷 비교
+        // 3. 트랜잭션 커밋 시점에 변경된 필드만 UPDATE 쿼리 자동 생성
+        // 4. UPDATE board_tb SET title=?, content=? WHERE id=?
+    }
+
     // JPQL을 사용한 게시글 삭제
     @Transactional
     public void deleteById(Long id) {

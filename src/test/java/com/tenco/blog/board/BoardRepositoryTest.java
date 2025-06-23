@@ -17,6 +17,50 @@ public class BoardRepositoryTest {
     private BoardRepository boardRepository;
 
     @Test
+    public void updateById_Dirty_Checking_테스트() {
+        // given: 수정할 게시글 ID와 수정 데이터 준비
+        Long id = 1L;
+
+        BoardRequest.UpdateDTO updateDTO = new BoardRequest.UpdateDTO();
+        updateDTO.setTitle("수정된 제목");
+        updateDTO.setContent("수정된 내용입니다");
+
+        // 수정 전 게시글 상태 확인
+        Board beforeUpdate = boardRepository.findById(id);
+        String originalTitle = beforeUpdate.getTitle();
+        String originalContent = beforeUpdate.getContent();
+
+        System.out.println("=== 수정 전 상태 ===");
+        System.out.println("원본 제목: " + originalTitle);
+        System.out.println("원본 내용: " + originalContent);
+
+        // when: Dirty Checking을 통한 게시글 수정
+        Board updatedBoard = boardRepository.updateById(id, updateDTO);
+
+        // then: 수정 결과 검증
+        System.out.println("=== 수정 후 상태 ===");
+        System.out.println("수정된 제목: " + updatedBoard.getTitle());
+        System.out.println("수정된 내용: " + updatedBoard.getContent());
+
+        // 1. 수정된 데이터가 올바르게 적용되었는지 확인
+        Assertions.assertThat(updatedBoard.getTitle()).isEqualTo("수정된 제목");
+        Assertions.assertThat(updatedBoard.getContent()).isEqualTo("수정된 내용입니다");
+
+        // 2. 원본 데이터와 다른지 확인
+        Assertions.assertThat(updatedBoard.getTitle()).isNotEqualTo(originalTitle);
+        Assertions.assertThat(updatedBoard.getContent()).isNotEqualTo(originalContent);
+
+        // 3. ID와 생성시간은 변경되지 않았는지 확인
+        Assertions.assertThat(updatedBoard.getId()).isEqualTo(id);
+        Assertions.assertThat(updatedBoard.getCreatedAt()).isEqualTo(beforeUpdate.getCreatedAt());
+
+        // 4. 연관관계(User)는 변경되지 않았는지 확인
+        Assertions.assertThat(updatedBoard.getUser().getId()).isEqualTo(beforeUpdate.getUser().getId());
+
+        System.out.println("Dirty Checking 테스트 완료: 변경된 필드만 자동 UPDATE");
+    }
+
+    @Test
     public void deleteById_JPQL_삭제_테스트() {
         // given: 삭제할 게시글 ID 준비
         // data.sql에 의해 게시글들이 존재 (ID: 1, 2, 3, ...)
