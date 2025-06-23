@@ -13,6 +13,84 @@ public class UserController {
 
     private final UserRepository userRepository;
 
+    // 회원정보 수정 폼 페이지: 기존 데이터로 폼 미리 채우기
+    @GetMapping("/user/update-form")
+    public String updateForm(HttpServletRequest request, HttpSession session) {
+
+        System.out.println("=== 회원정보 수정 폼 요청 ===");
+
+        // 1. 로그인 체크: 로그인하지 않은 사용자는 접근 불가
+        User sessionUser = (User) session.getAttribute("sessionUser");
+        if (sessionUser == null) {
+            System.out.println("로그인하지 않은 사용자의 회원정보 수정 시도");
+            return "redirect:/login-form";
+        }
+
+        System.out.println("수정 요청자: " + sessionUser.getUsername());
+
+        // 2. 최신 사용자 정보 조회 (세션 정보는 옛날 것일 수 있음)
+        User user = userRepository.findById(sessionUser.getId());
+
+        System.out.println("최신 사용자 정보 조회 완료");
+
+        // 3. 수정 폼에 기존 데이터 전달 (미리 채우기용)
+        // 주의: 비밀번호는 보안상 전달하지 않음
+        request.setAttribute("user", user);
+
+        return "user/update-form";
+    }
+
+    // 회원정보 수정 처리: Dirty Checking과 세션 동기화
+    @PostMapping("/user/update")
+    public String update(UserRequest.UpdateDTO reqDTO, HttpSession session, HttpServletRequest request) {
+
+        System.out.println("=== 회원정보 수정 요청 ===");
+
+        // 1. 로그인 체크
+        User sessionUser = (User) session.getAttribute("sessionUser");
+        if (sessionUser == null) {
+            System.out.println("로그인하지 않은 사용자의 수정 시도");
+            return "redirect:/login-form";
+        }
+
+        System.out.println("수정 요청자: " + sessionUser.getUsername());
+        System.out.println("새 이메일: " + reqDTO.getEmail());
+
+        try {
+            // 2. 입력 데이터 검증
+            reqDTO.validate();
+            System.out.println("입력 데이터 검증 완료");
+
+            // 3. Dirty Checking을 통한 회원정보 수정
+            User updatedUser = userRepository.updateById(sessionUser.getId(), reqDTO);
+
+            System.out.println("=== 회원정보 수정 완료 ===");
+            System.out.println("수정된 사용자 ID: " + updatedUser.getId());
+            System.out.println("최종 이메일: " + updatedUser.getEmail());
+
+            // 4. 세션 동기화: 수정된 정보를 세션에 반영
+            session.setAttribute("sessionUser", updatedUser);
+
+            System.out.println("=== 세션 동기화 완료 ===");
+            System.out.println("세션이 최신 정보로 업데이트됨");
+
+            // 5. 수정 완료 후 메인 페이지로 리다이렉트
+            return "redirect:/?success=update";
+
+        } catch (IllegalArgumentException e) {
+            // 검증 실패 시 에러 메시지와 함께 수정 폼으로 돌아가기
+            System.out.println("회원정보 수정 실패: " + e.getMessage());
+            request.setAttribute("errorMessage", e.getMessage());
+
+            // 수정 폼에 기존 데이터 다시 전달
+            User user = userRepository.findById(sessionUser.getId());
+            request.setAttribute("user", user);
+
+            return "user/update-form";
+        }
+    }
+
+
     // 로그인 폼 페이지 (추후 구현 예정)
     @GetMapping("/login-form")
     public String loginForm() {

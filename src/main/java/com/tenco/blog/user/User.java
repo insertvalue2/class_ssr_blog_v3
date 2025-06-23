@@ -37,4 +37,23 @@ public class User {
         this.email = email;
         this.createdAt = createdAt;
     }
+
+    // 회원정보 수정을 위한 비즈니스 메서드
+    public void update(UserRequest.UpdateDTO updateDTO) {
+        // 비즈니스 규칙 검증
+        updateDTO.validate();
+
+        // 영속 상태 엔티티의 필드 값 변경
+        // 이 변경사항들이 Dirty Checking 대상이 됨
+        this.password = updateDTO.getPassword();
+        this.email = updateDTO.getEmail();
+        // username은 변경하지 않음 (고유 식별자 역할)
+
+        // 변경 감지(Dirty Checking) 동작 과정:
+        // 1. 영속성 컨텍스트가 엔티티 최초 상태를 스냅샷으로 보관
+        // 2. 필드 값 변경 시 현재 상태와 스냅샷 비교
+        // 3. 트랜잭션 커밋 시점에 변경된 필드만 UPDATE 쿼리 자동 생성
+        // 4. UPDATE user_tb SET password=?, email=? WHERE id=?
+    }
+
 }

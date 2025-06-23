@@ -58,4 +58,28 @@ public class UserRequest {
             }
         }
     }
+
+    // 회원정보 수정용 DTO
+    @Data
+    public static class UpdateDTO {
+        private String password;
+        private String email;
+        // username은 제외: 변경 불가능한 고유 식별자
+
+        // 회원정보 수정 데이터 검증 메서드
+        public void validate() {
+            if (password == null || password.trim().isEmpty()) {
+                throw new IllegalArgumentException("비밀번호는 필수입니다");
+            }
+            if (password.length() < 4) {
+                throw new IllegalArgumentException("비밀번호는 4자 이상이어야 합니다");
+            }
+//            if (email == null || email.trim().isEmpty()) {
+//                throw new IllegalArgumentException("이메일은 필수입니다");
+//            }
+//            if (!email.contains("@") || !email.contains(".")) {
+//                throw new IllegalArgumentException("올바른 이메일 형식이 아닙니다");
+//            }
+        }
+    }
 }
